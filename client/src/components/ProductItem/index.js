@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { pluralize } from "../../utils/helpers"
 import { useStoreContext } from '../../utils/GlobalState';
+import { idbPromise } from "../../utils/helpers";
 import {
   REMOVE_FROM_CART,
   UPDATE_CART_QUANTITY,
@@ -23,14 +24,15 @@ function ProductItem(item) {
   const { cart } = state;
 
   const addToCart = () => {
-    // find the cart item with the matching id
-    const itemInCart = cart.find((cartItem) => cartItem._id === _id);
-  
-    // if there was a match, call UPDATE with a new purchase quantity
+    const itemInCart = cart.find((cartItem) => cartItem._id === _id)
     if (itemInCart) {
       dispatch({
         type: UPDATE_CART_QUANTITY,
         _id: _id,
+        purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
+      });
+      idbPromise('cart', 'put', {
+        ...itemInCart,
         purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
       });
     } else {
@@ -38,8 +40,9 @@ function ProductItem(item) {
         type: ADD_TO_CART,
         product: { ...item, purchaseQuantity: 1 }
       });
+      idbPromise('cart', 'put', { ...item, purchaseQuantity: 1 });
     }
-  };
+  }
   return (
     <div className="card px-1 py-1">
       <Link to={`/products/${_id}`}>
